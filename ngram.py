@@ -2,12 +2,7 @@
 Author: Herat Gandhi
 '''
 import re
-
-def dupli(the_list):
-    the_m_list = the_list.split()
-    count = the_m_list.count
-    result = [(item, count(item)) for item in set(the_m_list)]
-    return result
+from collections import Counter
 
 '''
 file operations
@@ -22,8 +17,8 @@ def file_operations(filenames):
         sentences_with_tag = '';
         for sentence in sentences:
             sentences_with_tag += ' <s> '+sentence+' </s> '
-        print (dupli(sentences_with_tag))
-        
+        words = list(Counter(sentences_with_tag.split()).items())
+        print(words)
 
 def main():
     file_operations(['wsj/wsj.train'])
