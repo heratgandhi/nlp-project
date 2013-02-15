@@ -7,16 +7,16 @@ file operations
 param: array of file names
 '''
 def file_operations(filenames):
-    '''read file first and get contents'''
+    # process each file individually
     for filename in filenames:
-        f = open(filename, 'r')
-        lines = '';
-        for line in f:
-            lines += line
-        sentences = re.compile('[.!?]').split(lines)
-        print (sentences)
+        #open file in read mode
+        lines = open(filename, 'r').read()
+        sentences = re.compile(r'(?<=[.!?;])\s*').split(lines)
+        sentences_with_tag = '';
+        for sentence in sentences:
+            sentences_with_tag += '<s> '+sentence+' </s>'
 
 def main():
-    file_operations(['wsj/wsj.test','wsj/wsj.train'])
+    file_operations(['wsj/wsj.test'])
         
 main()
