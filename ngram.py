@@ -17,8 +17,15 @@ def file_operations(filenames):
         sentences_with_tag = '';
         for sentence in sentences:
             sentences_with_tag += ' <s> '+sentence+' </s> '
-        words = list(Counter(sentences_with_tag.split()).items())
-        print(words)
+        words = sentences_with_tag.split()
+        unigram_list = list(Counter(words).items())
+        index_r = 0
+        bi_words = []
+        while index_r < len(words):
+            if index_r + 1 < len(words):
+                bi_words.append(words[index_r] + " " + words[index_r+1])
+                index_r += 2
+        bigram_list = list(Counter(bi_words).items())
 
 def main():
     file_operations(['wsj/wsj.train'])
