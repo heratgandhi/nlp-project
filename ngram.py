@@ -24,7 +24,7 @@ def file_operations(filenames):
         while index_r < len(words):
             if index_r + 1 < len(words):
                 bi_words.append(words[index_r] + " " + words[index_r+1])
-                index_r += 2
+                index_r += 1
         bigram_list = list(Counter(bi_words).items())
 
 def main():
