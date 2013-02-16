@@ -38,9 +38,8 @@ def file_operations(filenames):
         len_bigram = len(bigram_list)
         
         bigram_prob = bigram_list
-        bigram_prob = [(bigram[0], bigram[1] / unigram_list [[x for x, y in enumerate(unigram_list) if y[0] == (bigram[0].split()[0])][0]][1]) for bigram in bigram_prob]
-        
-
+        unigram_dict = {key: value for (key, value) in unigram_list}
+        bigram_prob = [(bigram[0], bigram[1] / unigram_dict [bigram[0].split()[0]]) for bigram in bigram_prob]
 def main():
     file_operations(['wsj/wsj.train'])
         
