@@ -20,12 +20,14 @@ def file_operations(filenames):
         words = sentences_with_tag.split()
         unigram_list = list(Counter(words).items())
         index_r = 0
-        bi_words = []
-        while index_r < len(words):
-            if index_r + 1 < len(words):
-                bi_words.append(words[index_r] + " " + words[index_r+1])
-                index_r += 1
+        bi_words = words
+        while index_r < len(bi_words):
+            if index_r + 1 < len(bi_words):
+                bi_words[index_r] += " " + bi_words[index_r+1]
+            index_r += 1
+        #print(bi_words)
         bigram_list = list(Counter(bi_words).items())
+        #print(bigram_list)
 
 def main():
     file_operations(['wsj/wsj.train'])
