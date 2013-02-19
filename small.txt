@@ -1,0 +1,16 @@
+</DOC>
+<DOC>
+<DOCNO> WSJ870323-0181 </DOCNO>
+<HL> South Korea's Current Account</HL>
+<DD> 03/23/87</DD>
+<SO> WALL STREET JOURNAL (J)</SO>
+<IN> FREST
+MONETARY NEWS, FOREIGN EXCHANGE, TRADE (MON) </IN>
+<DATELINE> SEOUL, South Korea </DATELINE>
+<TEXT>
+   South Korea posted a surplus on its current account of $419 million in February, in contrast to a deficit of $112 million a year earlier, the government said. 
+The current account comprises trade in goods and services and some unilateral transfers. 
+
+</TEXT>
+</DOC>
+<DOC>
