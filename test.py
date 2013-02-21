@@ -1,4 +1,4 @@
 import re
 
-text = re.sub('<[^<]+>', "", open("wsj/wsj.train").read())
+text = re.sub('<[^<]+>', "", open("small.txt").read())
 print(text)

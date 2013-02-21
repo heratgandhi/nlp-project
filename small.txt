@@ -7,10 +7,3 @@
 <IN> FREST
 MONETARY NEWS, FOREIGN EXCHANGE, TRADE (MON) </IN>
 <DATELINE> SEOUL, South Korea </DATELINE>
-<TEXT>
-   South Korea posted a surplus on its current account of $419 million in February, in contrast to a deficit of $112 million a year earlier, the government said. 
-The current account comprises trade in goods and services and some unilateral transfers. 
-
-</TEXT>
-</DOC>
-<DOC>
