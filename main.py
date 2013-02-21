@@ -22,6 +22,7 @@ def file_operations(filenames):
     
     for filename in filenames:
         lines = open(filename, 'r').read()
+        lines = re.sub('<[^<]+>', "", lines)
         sentences = re.compile(r'(?<=[.!?;])\s*').split(lines)
         sentences_with_tag = '';
         
@@ -53,6 +54,8 @@ def file_operations(filenames):
             bigram_prob[key] = value / float(unigram_dict[key1])
              
         bigram_prob_smooth_1 = addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram)
+        
+        print(bigram_prob_smooth_1)
 
 def main():
     file_operations(['small.txt'])
