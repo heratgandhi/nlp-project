@@ -6,13 +6,10 @@ from collections import Counter
 
 '''
 file operations
-param: array of file names
+param: list of file names
 '''
 def file_operations(filenames):
-    # process each file individually
     for filename in filenames:
-        #open file in read mode
-        
         lines = open(filename, 'r').read()
         sentences = re.compile(r'(?<=[.!?;])\s*').split(lines)
         sentences_with_tag = '';
@@ -40,7 +37,9 @@ def file_operations(filenames):
         bigram_prob = bigram_list
         unigram_dict = {key: value for (key, value) in unigram_list}
         bigram_prob = [(bigram[0], bigram[1] / unigram_dict [bigram[0].split()[0]]) for bigram in bigram_prob]
+        
+        print(bigram_prob)
 def main():
-    file_operations(['wsj/wsj.train'])
+    file_operations(['small.txt'])
         
 main()
