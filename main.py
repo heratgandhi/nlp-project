@@ -31,14 +31,18 @@ def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
     for word in words:
         if word.split()[0] in unigram_dict.keys():
             if smoothing:
-                print(prob)
                 prob *= float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length)
-                print(prob)
             else:
                 prob *= float(text.count(word)) / float(unigram_dict[word.split()[0]])
         else:
             continue
-    return prob
+    if not perplexity:
+        return prob
+    else:
+        if prob != 0:
+            return float(1/prob) ** float(1/float(vocab_length))
+        else:
+            return 0
     
 def file_operations(filenames):
     sentences_with_tag = ''
@@ -76,7 +80,7 @@ def file_operations(filenames):
          
     bigram_prob_smooth_1 = addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram)
     
-    print(probfinder(sentences_with_tag, sentences_with_tag, unigram_dict,True,False,len_unigram))
+    print(probfinder(sentences_with_tag, sentences_with_tag, unigram_dict,False,True,len_unigram))
 
 def main():
     file_operations(['small.txt','small2.txt'])
