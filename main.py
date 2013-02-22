@@ -56,7 +56,7 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
 def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
     if not perplexity:
         sentence = '<s> ' + sentence + ' </s>'
-    words.extend(sentence.split())
+    words = sentence.split()
     
     index = 0
     while index < len(words)-1:
@@ -73,11 +73,14 @@ def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
                 prob *= float(text.count(word)) / float(unigram_dict[word.split()[0]])
         else:
             continue
+    
+    print(prob)    
+        
     if not perplexity:
         return prob
     else:
         if prob != 0:
-            return float(1/prob) ** float(1/float(vocab_length))
+            return float(1/prob) ** float(1/len(sentence))
         else:
             return 0
     
@@ -131,13 +134,30 @@ def file_operations(filenames):
         key1 = key.split()[0]
         bigram_prob[key] = value / float(unigram_dict[key1])
     
-    #print(probfinder('There is a bug', sentences_with_tag, unigram_dict,False,False,len_unigram))
+    print(probfinder('here you go', sentences_with_tag, unigram_dict,True,True,len_unigram))
     unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
     
-    for i in range(5):
-        print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,2))
+    '''for i in range(5):
+        print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,2))'''
 
 def main():
     file_operations(['wsj/wsj.train'])
-        
-main()
+
+def authorPrediction(filenames):
+    text = ''
+    email = dict()
+    i = 1
+    for filename in filenames:
+        f = open(filename, 'r')
+        for line in f:
+            l1 = line.split()[0]
+            l2 = ' '.join(line.split()[1:])
+            if l1 in email.keys():
+                email[l1] += ' '+l2
+            else:
+                email[l1] = l2
+    for k,v in email.items():
+        email[k] = set(v.split())
+    print(email)          
+#main()
+authorPrediction(['EnronDataset/train.txt'])
