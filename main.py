@@ -5,7 +5,11 @@ Created on Feb 17, 2013
 '''
 
 import re
+import operator
+import random
 from collections import Counter
+from collections import OrderedDict
+from operator import itemgetter
 
 '''
 file operations
@@ -18,6 +22,22 @@ def addOneSmoothingBigram(unigram_dict, probability_dict, vocab_length):
         add_one_smooth_bi[key] = float(value + 1.0) / (float(unigram_dict[key.split()[0]]) + vocab_length)
     return add_one_smooth_bi
 
+def randomeSentenceGenerator(unigram_dict,text,vocab_length,model):
+    sentence = ''
+    max_prob = unigram_dict[max(unigram_dict, key = lambda x: unigram_dict.get(x) )]
+    print(max_prob)
+    if model == 1:
+        print('unigram model for sentence generation')
+        while (not '</s>' in sentence):
+            random_p = random.uniform(0.0,max_prob+0.5)
+            for key,value in unigram_dict.items():
+                if value > random_p - 0.001 and value < random_p + 0.001:
+                    sentence += ' ' + key
+    else:
+        print('bigram model for sentence generation')
+    sentence = re.sub('<[^<]+>', "", sentence)
+    return sentence
+        
 def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
     if not perplexity:
         sentence = '<s> ' + sentence + ' </s>'
@@ -62,7 +82,7 @@ def file_operations(filenames):
     for key, value in unigram_prob.items():
         unigram_prob[key] = float(value/len_unigram)
     
-    bi_words = []
+    '''bi_words = []
     for key,value in unigram_dict.items():
         for key1,value1 in unigram_dict.items():
             bi_words.append(key + " " + key1)
@@ -78,11 +98,12 @@ def file_operations(filenames):
         key1 = key.split()[0]
         bigram_prob[key] = value / float(unigram_dict[key1])
          
-    bigram_prob_smooth_1 = addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram)
-    
-    print(probfinder(sentences_with_tag, sentences_with_tag, unigram_dict,False,True,len_unigram))
+    bigram_prob_smooth_1 = addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram)'''
+    #print(probfinder('There is a bug', sentences_with_tag, unigram_dict,False,False,len_unigram))
+    unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
+    print(randomeSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, 1))
 
 def main():
-    file_operations(['small.txt','small2.txt'])
+    file_operations(['small.txt'])
         
 main()
