@@ -41,7 +41,7 @@ def randomeSentenceGenerator(unigram_dict,text,vocab_length,model):
 def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
     if not perplexity:
         sentence = '<s> ' + sentence + ' </s>'
-    words = sentence.split()
+    words.extend(sentence.split())
     index = 0
     while index < len(words)-1:
         words[index] += ' ' + words[index+1]
@@ -66,6 +66,7 @@ def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
     
 def file_operations(filenames):
     sentences_with_tag = ''
+    
     for filename in filenames:
         lines = open(filename, 'r').read()
         lines = re.sub('<[^<]+>', "", lines)
@@ -73,9 +74,12 @@ def file_operations(filenames):
         
         for sentence in sentences:
             sentences_with_tag += ' <s> '+sentence+' </s> '
-        words = sentences_with_tag.split()
-        
+    words = sentences_with_tag.split()
+    
+    print(words)
+    print(sentences_with_tag)    
     unigram_dict = dict(Counter(words).items())
+    print(unigram_dict)
     len_unigram = len(unigram_dict)
      
     unigram_prob = dict(unigram_dict)
@@ -104,6 +108,6 @@ def file_operations(filenames):
     print(randomeSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, 1))
 
 def main():
-    file_operations(['small.txt'])
+    file_operations(['small.txt','small2.txt'])
         
 main()
