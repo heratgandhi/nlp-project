@@ -10,7 +10,7 @@ import random
 from collections import Counter
 from collections import OrderedDict
 from operator import itemgetter
-
+import csv
 '''
 file operations
 param: array of file names
@@ -143,7 +143,7 @@ def file_operations(filenames):
 def main():
     file_operations(['wsj/wsj.train'])
 
-def authorPrediction(filenames):
+def authorPrediction(filenames,test):
     text = ''
     email = dict()
     i = 1
@@ -158,6 +158,23 @@ def authorPrediction(filenames):
                 email[l1] = l2
     for k,v in email.items():
         email[k] = set(v.split())
-    print(email)          
+    testfiles = []    
+    testfiles.append(filenames[1])
+    testfiles.append(test[0])
+    i =1
+    fw = open('Result.txt','w')
+    for filename in testfiles:
+        f = open(filename,'r')        
+        for line in f:
+            l1 = line.split()[0]
+            max = 0
+            maxk = ''
+            for k,v in email.items():
+                if len(v.intersection(set(line.split()[1:]))) > max :
+                     max = len(v.intersection(set(line.split()[1:])))
+                     maxk = k
+            fw.write(maxk+'\n')
+            print(str(i) + maxk)
+            i+=1                       
 #main()
-authorPrediction(['EnronDataset/train.txt'])
+authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
