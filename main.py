@@ -88,7 +88,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             valid_sentence.replace(wd,'<UNK>')
     unk_prob = float(valid_sentence.find('<UNK>')) / float(vocab_length)
     
-    words = sentence.split()
+    words = list(set(sentence.split()))
     prob = 0
     
     for word in words:
@@ -98,10 +98,11 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             prob += unk_prob
     
     print('#### Unigram Model Perplexity ####')
-    print(math.exp( (prob * -1) / len(sentence) ))
+    print(math.exp( (prob * -1) / len(words) ))
     
     prob = 0
     index = 0
+    #words = list(set(words))
     while index < len(words)-1:
         words[index] += ' ' + words[index+1]
         index += 1
@@ -117,7 +118,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             prob += unk_prob
     
     print('#### Bigram Model Perplexity ####')
-    print(math.exp( (prob * -1) / len(sentence) ))
+    print(math.exp( (prob * -1) / len(words) ))
     
 '''
 file operations
