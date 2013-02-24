@@ -73,40 +73,51 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     sentence = re.sub('<[^<]+>', "", sentence)
     return sentence
         
-def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length,model):
-    if not perplexity:
-        sentence = '<s> ' + sentence + ' </s>'
+def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfiles):
+    sentence = ''
+    for tf in testfiles:
+        sentence += open(tf, 'r').read()
+    
+    valid_sentence = ''
+    for vf in validationfiles:
+        valid_sentence += open(vf,'r').read()
+    
+    validt_words = list(set(valid_sentence.split()))
+    for wd in validt_words:
+        if not(wd in unigram_dict.keys()):
+            valid_sentence.replace(wd,'<UNK>')
+    unk_prob = float(valid_sentence.find('<UNK>')) / float(vocab_length)
+    
     words = sentence.split()
     prob = 0
     
-    if model == 2:
-        index = 0
-        while index < len(words)-1:
-            words[index] += ' ' + words[index+1]
-            index += 1
-        words.pop()
-        
-        for word in words:
-            if word.split()[0] in unigram_dict.keys():
-                if smoothing:
-                    prob += math.log(float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length))
-                else:
-                    prob += math.log(float(text.count(word)) / float(unigram_dict[word.split()[0]]))
-            else:
-                continue
-    else:
-        for word in words:
-            if word in unigram_dict.keys():
-                prob += float(math.log(unigram_dict[word]))
-    print(math.log(prob))    
-            
-    if not perplexity:
-        return prob
-    else:
-        if prob != 0:
-            return math.exp(float(1/math.exp(math.log(prob))) ** float(1/len(sentence)))
+    for word in words:
+        if word in unigram_dict.keys():
+            prob += float(math.log(unigram_dict[word]))
         else:
-            return 0
+            prob += unk_prob
+    
+    print('#### Unigram Model Perplexity ####')
+    print(math.exp( (prob * -1) / len(sentence) ))
+    
+    prob = 0
+    index = 0
+    while index < len(words)-1:
+        words[index] += ' ' + words[index+1]
+        index += 1
+    words.pop()
+    
+    for word in words:
+        if word.split()[0] in unigram_dict.keys():
+            if smoothing:
+                prob += math.log(float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length))
+            else:
+                prob += math.log(float(text.count(word)) / float(unigram_dict[word.split()[0]]))
+        else:
+            prob += unk_prob
+    
+    print('#### Bigram Model Perplexity ####')
+    print(math.exp( (prob * -1) / len(sentence) ))
     
 '''
 file operations
@@ -161,10 +172,7 @@ def file_operations(filenames, validationfiles, testfiles, operation):
         return
     
     if operation == 7:
-        tflines = ''
-        for tf in testfiles:
-             tflines += open(tf, 'r').read()
-        print(probfinder(tflines, sentences_with_tag, unigram_dict,True,True,len_unigram,1))
+        probfinder(testfiles, sentences_with_tag, unigram_dict,True,len_unigram,validationfiles)
     
     if operation == 4:
         list1 = {}
@@ -289,12 +297,12 @@ def main():
             authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
         elif int(operation) > 0:
             filename = input('Enter training file name(E.g; wsj/wsj.train): ')
-            if int(operation) == 1 or 2 or 3 or 4 or 6:
-                file_operations([filename],[],[],int(operation))
-            elif int(operation) == 7:
+            if int(operation) == 7:
                 validate_file = input('Enter validation file name(E.g; wsj/wsj.validation): ')
                 test_file = input('Enter testing file name(E.g; wsj/wsj.test): ')
-                file_operations([filename],[validate_file],[test_fiel],int(operation))
+                file_operations([filename],[validate_file],[test_file],int(operation))
+            else:
+                file_operations([filename],[],[],int(operation))
                 
 #Main method is used for starting program                   
 main()
