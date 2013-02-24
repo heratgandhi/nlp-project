@@ -1,5 +1,5 @@
 '''
-Created on Feb 17, 2013
+Created on Feb 14, 2013
 
 @author: Jyoti Pandey, Herat Gandhi, Vinayaka Dattatraya, Saikiran
 '''
@@ -184,7 +184,7 @@ def authorPrediction(filenames,test):
     '''
     Open test files, read data from these files
     and compare which dictionary key has maximum common
-    unigrams. The maximum matched unigrams key is author
+    unigrams. The maximum matched unigrams' key is author
     predicted by system
     '''
     testfiles = []    
