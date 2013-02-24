@@ -17,6 +17,27 @@ def printDictionary(my_dictionary):
     for key,value in my_dictionary.items():
         print(str(key) + ' : ' + str(value))
         
+#Witten Bell smoothing - 
+#Probability mass is shifted around, depending on the context of words
+#That is :(N         , T         , null, c          , Z)
+def wittenBellSmoothingBigram(ngram_list, words, corpus_data, ngram_probabilityList):
+    witten_smooth_prob = {}
+    for data in corpus_data:
+        c = corpus_data[data][3]
+        T = corpus_data[data][1]
+        Z = corpus_data[data][4]
+        N = corpus_data[data][0]
+        
+        if(c == 0):
+            witten_smooth_prob[data] = float(T / float(Z * float(len(ngram_list) + T)))
+        else :
+            if((N + T) is not 0) : 
+                witten_smooth_prob[data] = float(c / float(N + T))
+            else :
+                #Handle the case when the bigram has just one word in the key
+                witten_smooth_prob[data] = ngram_probabilityList[data]
+    return witten_smooth_prob        
+        
 def addOneSmoothingBigram(unigram_dict, probability_dict, vocab_length):
     add_one_smooth_bi = dict()
     for key,value in probability_dict.items():
@@ -91,7 +112,7 @@ def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length,mode
 file operations
 param: array of file names
 '''    
-def file_operations(filenames, testfiles, operation):
+def file_operations(filenames, validationfiles, testfiles, operation):
     sentences_with_tag = ''
     
     for filename in filenames:
@@ -111,6 +132,7 @@ def file_operations(filenames, testfiles, operation):
         unigram_prob[key] = float(value/len_unigram)
     
     if operation == 1:
+        print ('#### Unigram Probabilities #####')
         printDictionary(unigram_prob)
         return
     
@@ -129,26 +151,58 @@ def file_operations(filenames, testfiles, operation):
         bigram_prob[key] = value / float(unigram_dict[key1])
         
     if operation == 2:
+        print ('#### Bigram Probabilities #####')
         printDictionary(bigram_prob)
         return
     
     if operation == 3:
+        print ('#### Add-one smoothing results #####')
         printDictionary(addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram))
         return
     
-    tflines = ''
-    for tf in testfiles:
-         tflines += open(tf, 'r').read()
-    print(probfinder(tflines, sentences_with_tag, unigram_dict,True,True,len_unigram,1))
+    if operation == 7:
+        tflines = ''
+        for tf in testfiles:
+             tflines += open(tf, 'r').read()
+        print(probfinder(tflines, sentences_with_tag, unigram_dict,True,True,len_unigram,1))
+    
+    if operation == 4:
+        list1 = {}
+        list_vocab_after = []
+        tempWordsList = sentences_with_tag.split()
+        #Iterate over all the tokens
+        #Pop the last word into a list to keep track of the words after w-1
+        for i in range (0, len(words)):
+            
+            list_vocab_after.append(i + 1)
+            poppedWord = tempWordsList.pop()
+            list_vocab_after[i] = poppedWord
+            
+            count_bigramCount_0 = 0
+    
+            if(tempWordsList.__len__() > 0) :
+                for key in bigram_dict:
+                    if(key.split()[0] == poppedWord):
+                        if(bigram_dict[key] == 0):
+                            count_bigramCount_0 = count_bigramCount_0 + 1
+                        if(not(key in list1.keys())):
+                            #list has (Word_count, VocabCount, null, bigramCount, ZeroCount)
+                            #That is :(N         , T         , null, c          , Z)
+                            list1[key] = i, Counter(list_vocab_after).items().__len__() - 1, 0 , bigram_dict[key], count_bigramCount_0
+        wittenBellDictionary = wittenBellSmoothingBigram(bigram_dict, tempWordsList, list1, bigram_prob)
+        print ('#### Witten Bell Discounting results #####')
+        printDictionary(wittenBellDictionary)
+        return
     
     if operation == 6:
         unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
-        print('Random sentences using Unigram model:')
+        print('#### Random sentences using Unigram model: ####')
         for i in range(5):
             print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,1))
-        print('Random sentences using Bigram model:')
+        print('#### Random sentences using Bigram model: ####')
         for i in range(5):
             print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,2))
+        return
 
 '''
 Author prediction
@@ -214,21 +268,33 @@ return:
     void
 '''
 def main():
-    print('##### NLP Project - 1 #####')
-    print('Choose one of the following operations: ')
-    print('1 - Unigram Model Generation')
-    print('2 - Bigram Model Generation')
-    print('3 - Add-one smoothing')
-    print('4 - Witten Bell Discounting')
-    print('5 - Author prediction')
-    print('6 - Random Sentence Generation')
+    operation = -1
     
-    operation = input('Enter input here: ')
-    
-    if int(operation) == 5:
-        authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
-    else:    
-        file_operations(['wsj/wsj.train'],['wsj/wsj.test'],int(operation))
+    while int(operation) != 0:
+        print('')
+        print('##### NLP Project - 1 #####')
+        print('Choose one of the following operations: ')
+        print('1 - Unigram Model Generation')
+        print('2 - Bigram Model Generation')
+        print('3 - Add-one smoothing')
+        print('4 - Witten Bell Discounting')
+        print('5 - Author prediction')
+        print('6 - Random Sentence Generation')
+        print('7 - Measure Perplexity')
+        print('0 - Exit')
+        print('')
+        operation = input('Enter input here: ')
+        
+        if int(operation) == 5:
+            authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
+        elif int(operation) > 0:
+            filename = input('Enter training file name(E.g; wsj/wsj.train): ')
+            if int(operation) == 1 or 2 or 3 or 4 or 6:
+                file_operations([filename],[],[],int(operation))
+            elif int(operation) == 7:
+                validate_file = input('Enter validation file name(E.g; wsj/wsj.validation): ')
+                test_file = input('Enter testing file name(E.g; wsj/wsj.test): ')
+                file_operations([filename],[validate_file],[test_fiel],int(operation))
                 
 #Main method is used for starting program                   
 main()
