@@ -1,21 +1,22 @@
 '''
 Created on Feb 17, 2013
 
-@author: Jyoti Pandey, Herat Gandhi
+@author: Jyoti Pandey, Herat Gandhi, Vinayaka Dattatraya, Saikiran
 '''
 
 import re
 import operator
 import random
+import math
+
 from collections import Counter
 from collections import OrderedDict
 from operator import itemgetter
-import csv
-'''
-file operations
-param: array of file names
-'''
 
+def printDictionary(my_dictionary):
+    for key,value in my_dictionary.items():
+        print(str(key) + ' : ' + str(value))
+        
 def addOneSmoothingBigram(unigram_dict, probability_dict, vocab_length):
     add_one_smooth_bi = dict()
     for key,value in probability_dict.items():
@@ -27,16 +28,14 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     max_prob = unigram_dict[max(unigram_dict, key = lambda x: unigram_dict.get(x) )]
     
     if model == 1:
-        print('unigram model for sentence generation')
-        while (not '</s>' in sentence):
+        while (not '</s>' in sentence) and (len(sentence) < 30):
             random_p = random.uniform(0.0,max_prob+0.5)
             for key,value in unigram_dict.items():
                 if value > random_p - 0.001 and value < random_p + 0.001:
                     sentence += ' ' + key
     else:
-        print('bigram model for sentence generation')
         while (not '</s>' in sentence):
-            if len(sentence) > 30:
+            if len(sentence.split()) > 20:
                 break
             random_p = random.uniform(0,1)
             if not '<s>' in sentence:
@@ -53,38 +52,46 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     sentence = re.sub('<[^<]+>', "", sentence)
     return sentence
         
-def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length):
+def probfinder(sentence,text,unigram_dict,perplexity,smoothing,vocab_length,model):
     if not perplexity:
         sentence = '<s> ' + sentence + ' </s>'
     words = sentence.split()
+    prob = 0
     
-    index = 0
-    while index < len(words)-1:
-        words[index] += ' ' + words[index+1]
-        index += 1
-    words.pop()
-    prob = 1
-    
-    for word in words:
-        if word.split()[0] in unigram_dict.keys():
-            if smoothing:
-                prob *= float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length)
-            else:
-                prob *= float(text.count(word)) / float(unigram_dict[word.split()[0]])
-        else:
-            continue
-    
-    print(prob)    
+    if model == 2:
+        index = 0
+        while index < len(words)-1:
+            words[index] += ' ' + words[index+1]
+            index += 1
+        words.pop()
         
+        for word in words:
+            if word.split()[0] in unigram_dict.keys():
+                if smoothing:
+                    prob += math.log(float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length))
+                else:
+                    prob += math.log(float(text.count(word)) / float(unigram_dict[word.split()[0]]))
+            else:
+                continue
+    else:
+        for word in words:
+            if word in unigram_dict.keys():
+                prob += float(math.log(unigram_dict[word]))
+    print(math.log(prob))    
+            
     if not perplexity:
         return prob
     else:
         if prob != 0:
-            return float(1/prob) ** float(1/len(sentence))
+            return math.exp(float(1/math.exp(math.log(prob))) ** float(1/len(sentence)))
         else:
             return 0
     
-def file_operations(filenames):
+'''
+file operations
+param: array of file names
+'''    
+def file_operations(filenames, testfiles, operation):
     sentences_with_tag = ''
     
     for filename in filenames:
@@ -103,23 +110,10 @@ def file_operations(filenames):
     for key, value in unigram_prob.items():
         unigram_prob[key] = float(value/len_unigram)
     
-    '''bi_words = []
-    for key,value in unigram_dict.items():
-        for key1,value1 in unigram_dict.items():
-            bi_words.append(key + " " + key1)
+    if operation == 1:
+        printDictionary(unigram_prob)
+        return
     
-    bigram_dict = dict()
-    for bi_word in bi_words:
-        bigram_dict[bi_word] = sentences_with_tag.count(bi_word)
-    
-    len_bigram = len(bigram_dict)
-    
-    bigram_prob = dict(bigram_dict)
-    for key,value in bigram_prob.items():
-        key1 = key.split()[0]
-        bigram_prob[key] = value / float(unigram_dict[key1])
-         
-    bigram_prob_smooth_1 = addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram)'''
     index_r = 0
     bi_words = words
     while index_r < len(bi_words):
@@ -133,20 +127,48 @@ def file_operations(filenames):
     for key,value in bigram_prob.items():
         key1 = key.split()[0]
         bigram_prob[key] = value / float(unigram_dict[key1])
+        
+    if operation == 2:
+        printDictionary(bigram_prob)
+        return
     
-    print(probfinder('here you go', sentences_with_tag, unigram_dict,True,True,len_unigram))
-    unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
+    if operation == 3:
+        printDictionary(addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram))
+        return
     
-    '''for i in range(5):
-        print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,2))'''
+    tflines = ''
+    for tf in testfiles:
+         tflines += open(tf, 'r').read()
+    print(probfinder(tflines, sentences_with_tag, unigram_dict,True,True,len_unigram,1))
+    
+    if operation == 6:
+        unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
+        print('Random sentences using Unigram model:')
+        for i in range(5):
+            print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,1))
+        print('Random sentences using Bigram model:')
+        for i in range(5):
+            print(str(i+1) + " " + randomSentenceGenerator(unigram_prob, sentences_with_tag, len_unigram, bigram_prob,2))
 
-def main():
-    file_operations(['wsj/wsj.train'])
-
+'''
+Author prediction
+param:
+    filenames: Files used for training and validation
+    filenames: Files used for testing
+return:
+    void
+output:
+    Prints all predictions for validation set and testing set with line numbers
+    and also writes the predictions to result.txt file
+'''
 def authorPrediction(filenames,test):
     text = ''
     email = dict()
     i = 1
+    '''
+    Read the training and validation files and construct email dictionary with keys
+    being author and values being their email data 
+    ''' 
     for filename in filenames:
         f = open(filename, 'r')
         for line in f:
@@ -156,13 +178,20 @@ def authorPrediction(filenames,test):
                 email[l1] += ' '+l2
             else:
                 email[l1] = l2
+    #Adjust email data in unigram set
     for k,v in email.items():
         email[k] = set(v.split())
+    '''
+    Open test files, read data from these files
+    and compare which dictionary key has maximum common
+    unigrams. The maximum matched unigrams key is author
+    predicted by system
+    '''
     testfiles = []    
     testfiles.append(filenames[1])
     testfiles.append(test[0])
-    i =1
-    fw = open('Result.txt','w')
+    i = 1
+    fw = open('result.txt','w')
     for filename in testfiles:
         f = open(filename,'r')        
         for line in f:
@@ -174,7 +203,32 @@ def authorPrediction(filenames,test):
                      max = len(v.intersection(set(line.split()[1:])))
                      maxk = k
             fw.write(maxk+'\n')
-            print(str(i) + maxk)
-            i+=1                       
-#main()
-authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
+            print(str(i) + ' ' + maxk)
+            i+=1
+
+'''
+Main method
+param:
+    void
+return:
+    void
+'''
+def main():
+    print('##### NLP Project - 1 #####')
+    print('Choose one of the following operations: ')
+    print('1 - Unigram Model Generation')
+    print('2 - Bigram Model Generation')
+    print('3 - Add-one smoothing')
+    print('4 - Witten Bell Discounting')
+    print('5 - Author prediction')
+    print('6 - Random Sentence Generation')
+    
+    operation = input('Enter input here: ')
+    
+    if int(operation) == 5:
+        authorPrediction(['EnronDataset/train.txt','EnronDataset/validation.txt'],['EnronDataset/test.txt'])
+    else:    
+        file_operations(['wsj/wsj.train'],['wsj/wsj.test'],int(operation))
+                
+#Main method is used for starting program                   
+main()
