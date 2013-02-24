@@ -73,36 +73,43 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     sentence = re.sub('<[^<]+>', "", sentence)
     return sentence
         
-def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfiles):
+def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfiles,unigram_prob):
     sentence = ''
     for tf in testfiles:
-        sentence += open(tf, 'r').read()
+        #sentence += open(tf, 'r').read()
+        with open(tf) as myfile:
+            s1 = myfile.readlines(50000)
+        for s in s1:
+            sentence += s
     
     valid_sentence = ''
     for vf in validationfiles:
-        valid_sentence += open(vf,'r').read()
+        #valid_sentence += open(vf,'r').read()
+        with open(vf) as myfile:
+            v1 = myfile.readlines(50000)
+        for v in v1:
+            valid_sentence += v
     
     validt_words = list(set(valid_sentence.split()))
     for wd in validt_words:
         if not(wd in unigram_dict.keys()):
             valid_sentence.replace(wd,'<UNK>')
-    unk_prob = float(valid_sentence.find('<UNK>')) / float(vocab_length)
+    unk_prob = float(valid_sentence.find('<UNK>')) / len(validt_words)
     
     words = list(set(sentence.split()))
     prob = 0
     
     for word in words:
-        if word in unigram_dict.keys():
-            prob += float(math.log(unigram_dict[word]))
+        if word in unigram_prob.keys():
+            prob += float(math.log(unigram_prob[word],2)) * unigram_prob[word]
         else:
             prob += unk_prob
     
     print('#### Unigram Model Perplexity ####')
-    print(math.exp( (prob * -1) / len(words) ))
+    print(2 ** (-1 * prob))
     
     prob = 0
     index = 0
-    #words = list(set(words))
     while index < len(words)-1:
         words[index] += ' ' + words[index+1]
         index += 1
@@ -111,14 +118,14 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     for word in words:
         if word.split()[0] in unigram_dict.keys():
             if smoothing:
-                prob += math.log(float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length))
+                prob += math.log(float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length),2) * (float(text.count(word) + 1.0) / (float(unigram_dict[word.split()[0]]) + vocab_length))
             else:
-                prob += math.log(float(text.count(word)) / float(unigram_dict[word.split()[0]]))
+                prob += math.log(float(text.count(word)) / float(unigram_dict[word.split()[0]])) * float(text.count(word),2) * (float(text.count(word)) / float(unigram_dict[word.split()[0]])) * float(text.count(word))
         else:
             prob += unk_prob
     
     print('#### Bigram Model Perplexity ####')
-    print(math.exp( (prob * -1) / len(words) ))
+    print(2 ** (-1 * prob))
     
 '''
 file operations
@@ -128,10 +135,17 @@ def file_operations(filenames, validationfiles, testfiles, operation):
     sentences_with_tag = ''
     
     for filename in filenames:
-        lines = open(filename, 'r').read()
+        if operation == 7:
+            with open(filename) as myfile:
+                lines1 = myfile.readlines(50000)
+            lines = ''
+            for l in lines1:
+                lines += l
+            
+        else:
+            lines = open(filename, 'r').read()
         lines = re.sub('<[^<]+>', "", lines)
         sentences = re.compile(r'(?<=[.!?;])\s*').split(lines)
-        
         for sentence in sentences:
             sentences_with_tag += ' <s> '+sentence+' </s> '
     words = sentences_with_tag.split()
@@ -173,7 +187,7 @@ def file_operations(filenames, validationfiles, testfiles, operation):
         return
     
     if operation == 7:
-        probfinder(testfiles, sentences_with_tag, unigram_dict,True,len_unigram,validationfiles)
+        probfinder(testfiles, sentences_with_tag, unigram_dict,True,len_unigram,validationfiles,unigram_prob)
     
     if operation == 4:
         list1 = {}
