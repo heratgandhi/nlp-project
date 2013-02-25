@@ -13,13 +13,20 @@ from collections import Counter
 from collections import OrderedDict
 from operator import itemgetter
 
+'''
+    Print Dictionary
+    param:
+        my_dictionary: Dictionary to print
+'''
 def printDictionary(my_dictionary):
     for key,value in my_dictionary.items():
         print(str(key) + ' : ' + str(value))
         
-#Witten Bell smoothing - 
-#Probability mass is shifted around, depending on the context of words
-#That is :(N         , T         , null, c          , Z)
+'''
+    Witten Bell smoothing 
+    Probability mass is shifted around, depending on the context of words
+    That is :(N         , T         , null, c          , Z)
+'''
 def wittenBellSmoothingBigram(ngram_list, words, corpus_data, ngram_probabilityList):
     witten_smooth_prob = {}
     for data in corpus_data:
@@ -37,33 +44,70 @@ def wittenBellSmoothingBigram(ngram_list, words, corpus_data, ngram_probabilityL
                 #Handle the case when the bigram has just one word in the key
                 witten_smooth_prob[data] = ngram_probabilityList[data]
     return witten_smooth_prob        
-        
+
+'''
+    Add one smoothing bigrams
+    param:
+        unigram_dict: Dictionary with unigram and counts
+        probability_dict: Dictionary with probabilities
+        vocab_length: Length of vocab
+    return:
+        Dictionary with smoothed probabilities
+'''        
 def addOneSmoothingBigram(unigram_dict, probability_dict, vocab_length):
     add_one_smooth_bi = dict()
     for key,value in probability_dict.items():
+        #Add one in the numerator and add vocab_length in the denominator
         add_one_smooth_bi[key] = float(value + 1.0) / (float(unigram_dict[key.split()[0]]) + vocab_length)
     return add_one_smooth_bi
 
+'''
+    Add one smoothing unigrams
+    param:
+        unigram_dict: Dictionary with unigram and counts
+        vocab_length: Distinct no of unigrams
+        len_corpus: Length of corpus
+    return:
+        Dictionary with smoothed probabilities
+'''
 def addOneSmoothingUnigram(unigram_dict, vocab_length,len_corpus):
     add_one_smooth_uni = dict()
     for key,value in unigram_dict.items():
         add_one_smooth_uni[key] = float(value + 1.0) / (vocab_length+len_corpus)    
     return add_one_smooth_uni
 
+'''
+    Random sentence generator
+    param:
+        unigram_dict: Unigram dictionary with counts
+        text: text retrieved from training corpus
+        vocab_length: Vocab length
+        bigram_prob: Dictionary with bigram probabilities
+        Model: 1 for Unigram, 2 for Bigram
+'''
 def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     sentence = ''
     max_prob = unigram_dict[max(unigram_dict, key = lambda x: unigram_dict.get(x) )]
     
     if model == 1:
+        '''
+            For unigram model, choose random no. between 0 to 1 and get a unigram
+            in that range
+        '''
         while (not '</s>' in sentence) and (len(sentence) < 30):
             random_p = random.uniform(0.0,max_prob+0.5)
             for key,value in unigram_dict.items():
                 if value > random_p - 0.001 and value < random_p + 0.001:
                     sentence += ' ' + key
     else:
+        '''
+            For bigram model, start with bigram containing <s> and progress
+            over with bigram having last word in the sentence 
+        '''
         while (not '</s>' in sentence):
             if len(sentence.split()) > 20:
                 break
+            #Choose random number between 0 and 1
             random_p = random.uniform(0,1)
             if not '<s>' in sentence:
                 for key,value in bigram_prob.items():
@@ -76,10 +120,30 @@ def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
                     if (lastword == key.split()[0]) and (value >= random_p - 0.05 and value <= random_p + 0.05) :
                         sentence += ' ' + key.split()[1]
                         break
+    #Remove tags from the text
     sentence = re.sub('<[^<]+>', "", sentence)
     return sentence
-        
+
+'''
+Perplexity Calculation
+param:
+    testfiles: Files used for testing
+    text: Text generated from training
+    unigram_dict: unigram dictionary with counts
+    smoothing: boolean variable whether smoothing should be used or not
+    vocab_length: Length of vocabulary
+    validationfiles: Validation files used for finding <UNK>
+    unigram_prob: Unigram probabilities
+return:
+    void
+output:
+    Print unigram and bigram perplexities
+Method:
+    First find the entropy of the model
+    and then use 2 ** Entropy to find perplexity
+'''    
 def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfiles,unigram_prob):
+    #Read test files
     sentence = ''
     for tf in testfiles:
         #sentence += open(tf, 'r').read()
@@ -87,7 +151,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             s1 = myfile.readlines(500000)
         for s in s1:
             sentence += s
-    
+    #Read validation files
     valid_sentence = ''
     for vf in validationfiles:
         #valid_sentence += open(vf,'r').read()
@@ -95,7 +159,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             v1 = myfile.readlines(500000)
         for v in v1:
             valid_sentence += v
-    
+    #Find UNK's probabilities
     validt_words = list(set(valid_sentence.split()))
     for wd in validt_words:
         if not(wd in unigram_dict.keys()):
@@ -104,7 +168,12 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     
     words = list(set(sentence.split()))
     prob = 0
-    
+    '''
+    Calculate perplexities for unigram model
+    If word is found in training then use its probability
+    otherwise use UNK's probability
+    This for loop calculates entropy of the model
+    '''
     for word in words:
         if word in unigram_prob.keys():
             prob += math.log(unigram_prob[word],2) * unigram_prob[word]
@@ -112,8 +181,15 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             prob += unk_prob
     
     print('#### Unigram Model Perplexity ####')
+    #Find perplexity by 2 ** entropy
     print(2 ** (-1 * prob))
     
+    '''
+    Calculate perplexities for bigram model
+    If word is found in training then use its probability
+    otherwise use UNK's probability
+    This for loop calculates entropy of the model
+    '''
     prob = 0
     index = 0
     while index < len(words)-1:
@@ -131,6 +207,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
             prob += unk_prob
     
     print('#### Bigram Model Perplexity ####')
+    #Find perplexity by 2 ** entropy
     print(2 ** (-1 * prob))
     
 '''
@@ -154,7 +231,7 @@ def file_operations(filenames, validationfiles, testfiles, operation):
         If operation is to find perplexity then we just read few lines
         because otherwise the value of perplexity becomes very high.
         '''
-        if operation == 7:
+        if operation == 7 or 4:
             with open(filename) as myfile:
                 lines1 = myfile.readlines(4000)
             lines = ''
@@ -179,44 +256,43 @@ def file_operations(filenames, validationfiles, testfiles, operation):
     unigram_prob = dict(unigram_dict)
     for key, value in unigram_prob.items():
         unigram_prob[key] = float(value/len_unigram)
-    
+    #Calculate unigram probabilities
     if operation == 1:
         print ('#### Unigram Probabilities #####')
         printDictionary(unigram_prob)
         return
-    
+    #Construct various bigrams
     index_r = 0
     bi_words = words
     while index_r < len(bi_words):
         if index_r + 1 < len(bi_words):
             bi_words[index_r] += " " + bi_words[index_r+1]
         index_r += 1
-        
     bigram_dict = dict(Counter(bi_words).items())
     len_bigram = len(bigram_dict)
     bigram_prob = dict(bigram_dict)
     for key,value in bigram_prob.items():
         key1 = key.split()[0]
         bigram_prob[key] = value / float(unigram_dict[key1])
-        
+    #Bigram probabilities    
     if operation == 2:
         print ('#### Bigram Probabilities #####')
         printDictionary(bigram_prob)
         return
-    
+    #Addone smoothing for bigrams
     if operation == 3:
         print ('#### Add-one smoothing bigrams results #####')
         printDictionary(addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram))
         return
-    
+    #Addone smoothing for unigrams
     if operation == 8:
         print('#### Add-one smoothing unigrams results ####')
         printDictionary(addOneSmoothingUnigram(unigram_dict, len_unigram,len(words)))
         return
-    
+    #Perplexity computation
     if operation == 7:
         probfinder(testfiles, sentences_with_tag, unigram_dict,True,len_unigram,validationfiles,unigram_prob)
-    
+    #Witten bell smoothing
     if operation == 4:
         list1 = {}
         list_vocab_after = []
@@ -244,7 +320,7 @@ def file_operations(filenames, validationfiles, testfiles, operation):
         print ('#### Witten Bell Discounting results #####')
         printDictionary(wittenBellDictionary)
         return
-    
+    #Generate random sentences using unigram and bigram models
     if operation == 6:
         unigram_prob = dict(sorted(unigram_prob.items(), key=itemgetter(1),reverse = True))
         print('#### Random sentences using Unigram model: ####')
