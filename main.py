@@ -78,7 +78,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     for tf in testfiles:
         #sentence += open(tf, 'r').read()
         with open(tf) as myfile:
-            s1 = myfile.readlines(50000)
+            s1 = myfile.readlines(500000)
         for s in s1:
             sentence += s
     
@@ -86,7 +86,7 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     for vf in validationfiles:
         #valid_sentence += open(vf,'r').read()
         with open(vf) as myfile:
-            v1 = myfile.readlines(50000)
+            v1 = myfile.readlines(500000)
         for v in v1:
             valid_sentence += v
     
@@ -94,14 +94,14 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     for wd in validt_words:
         if not(wd in unigram_dict.keys()):
             valid_sentence.replace(wd,'<UNK>')
-    unk_prob = float(valid_sentence.find('<UNK>')) / len(validt_words)
+    unk_prob = float(valid_sentence.find('<UNK>')) / len(valid_sentence)
     
     words = list(set(sentence.split()))
     prob = 0
     
     for word in words:
         if word in unigram_prob.keys():
-            prob += float(math.log(unigram_prob[word],2)) * unigram_prob[word]
+            prob += math.log(unigram_prob[word],2) * unigram_prob[word]
         else:
             prob += unk_prob
     
@@ -137,7 +137,7 @@ def file_operations(filenames, validationfiles, testfiles, operation):
     for filename in filenames:
         if operation == 7:
             with open(filename) as myfile:
-                lines1 = myfile.readlines(50000)
+                lines1 = myfile.readlines(4000)
             lines = ''
             for l in lines1:
                 lines += l
@@ -255,7 +255,7 @@ def authorPrediction(filenames,test):
                 email[l1] += ' '+l2
             else:
                 email[l1] = l2
-    #Adjust email data in unigram set
+    #Adjust email data in unigram set for each author
     for k,v in email.items():
         email[k] = set(v.split())
     '''
