@@ -1,4 +1,34 @@
-GOAL:
-This project is an open-ended programming assignment and research assign-
-ment in which you are to implement a collection of n-gram-based language
-models.
+//How to Run the executables
+
+Note: We have not included the corpus files in this submission as the file size 
+increases significantly. So while testing give proper path to the corpus files.
+
+Step 1:
+ Start by executing the main.py
+Choose one of the following operations: 
+1 - Unigram Model Generation
+2 - Bigram Model Generation
+3 - Add-one smoothing for bigrams
+4 - Witten Bell Discounting
+5 - Author prediction
+6 - Random Sentence Generation
+7 - Measure Perplexity
+8 - Add-one smoothing for unigrams
+0 - Exit
+
+If options are 1,2,3,4,6,7 and 8
+enter the file name for table generation of unigram,bigram,add-one smoothing, 
+Wittenbell smoothing,Random sentence generation or add-one smoothing.
+
+Enter any of the filenames.
+1. Dataset3/nfs.train 
+2. Dataset4/rcv1.train
+3. wsj/wsj.train
+4. EnronDataset/train.txt
+
+
+If option is 7
+Then enter both validation and test filenames.   
+ 
+
+
