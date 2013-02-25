@@ -44,6 +44,12 @@ def addOneSmoothingBigram(unigram_dict, probability_dict, vocab_length):
         add_one_smooth_bi[key] = float(value + 1.0) / (float(unigram_dict[key.split()[0]]) + vocab_length)
     return add_one_smooth_bi
 
+def addOneSmoothingUnigram(unigram_dict, vocab_length,len_corpus):
+    add_one_smooth_uni = dict()
+    for key,value in unigram_dict.items():
+        add_one_smooth_uni[key] = float(value + 1.0) / (vocab_length+len_corpus)    
+    return add_one_smooth_uni
+
 def randomSentenceGenerator(unigram_dict,text,vocab_length,bigram_prob,model):
     sentence = ''
     max_prob = unigram_dict[max(unigram_dict, key = lambda x: unigram_dict.get(x) )]
@@ -128,31 +134,48 @@ def probfinder(testfiles,text,unigram_dict,smoothing,vocab_length,validationfile
     print(2 ** (-1 * prob))
     
 '''
-file operations
-param: array of file names
+File operations
+param:
+    filenames: Files used for training
+    validationfiles: Files used for validation
+    filenames: Files used for testing
+    operation: Operation to be performed
+return:
+    void
 '''    
 def file_operations(filenames, validationfiles, testfiles, operation):
     sentences_with_tag = ''
     
+    '''
+    Read sentences from training file
+    '''
     for filename in filenames:
+        '''
+        If operation is to find perplexity then we just read few lines
+        because otherwise the value of perplexity becomes very high.
+        '''
         if operation == 7:
             with open(filename) as myfile:
                 lines1 = myfile.readlines(4000)
             lines = ''
             for l in lines1:
-                lines += l
-            
+                lines += l            
         else:
             lines = open(filename, 'r').read()
+        #Remove xml tags from text
         lines = re.sub('<[^<]+>', "", lines)
+        #Split lines from the file
         sentences = re.compile(r'(?<=[.!?;])\s*').split(lines)
+        #Add sentence start and end markers
         for sentence in sentences:
             sentences_with_tag += ' <s> '+sentence+' </s> '
+    #Get all the words         
     words = sentences_with_tag.split()
+    #Construct a unigram dictionary
     unigram_dict = dict(Counter(words).items())
-    
+    #Find length of unigram dictionary
     len_unigram = len(unigram_dict)
-     
+    #Calculate and store probabilities in seperate dictionaries 
     unigram_prob = dict(unigram_dict)
     for key, value in unigram_prob.items():
         unigram_prob[key] = float(value/len_unigram)
@@ -182,8 +205,13 @@ def file_operations(filenames, validationfiles, testfiles, operation):
         return
     
     if operation == 3:
-        print ('#### Add-one smoothing results #####')
+        print ('#### Add-one smoothing bigrams results #####')
         printDictionary(addOneSmoothingBigram(unigram_dict, bigram_dict, len_unigram))
+        return
+    
+    if operation == 8:
+        print('#### Add-one smoothing unigrams results ####')
+        printDictionary(addOneSmoothingUnigram(unigram_dict, len_unigram,len(words)))
         return
     
     if operation == 7:
@@ -299,11 +327,12 @@ def main():
         print('Choose one of the following operations: ')
         print('1 - Unigram Model Generation')
         print('2 - Bigram Model Generation')
-        print('3 - Add-one smoothing')
+        print('3 - Add-one smoothing for bigrams')
         print('4 - Witten Bell Discounting')
         print('5 - Author prediction')
         print('6 - Random Sentence Generation')
         print('7 - Measure Perplexity')
+        print('8 - Add-one smoothing for unigrams')
         print('0 - Exit')
         print('')
         operation = input('Enter input here: ')
